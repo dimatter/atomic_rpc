@@ -16,6 +16,5 @@
   "repository": {
     "type": "git",
     "url": "git://github.com/dimatter/atomic_rpc.git"
-  },
-
+  }
 }
