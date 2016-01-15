@@ -46,7 +46,7 @@ module.exports = class AtomicRPC extends emitter
 
   call: ({id: connectionId, method, params, callback}) ->
     unless connectionId?
-      _.every @connections, (connection, id) =>
+      _.every @connections, (socket, id) =>
         @call {id, method, params, callback}
         true
       return
@@ -57,20 +57,26 @@ module.exports = class AtomicRPC extends emitter
         callback 'no such socket'
       return
     params ?= {}
+    message = {method, params}
     if callback?
-      id = process.hrtime().join('')
+      if process.hrtime?
+        id = process.hrtime().join('')
+      else
+        id = Date.now() + "#{connectionId}"
+      message.id = id
       _callback = =>
         delete @callbacks[id]
         callback.apply @, arguments
 
       setTimeout =>
         if @callbacks[id]?
-          console.error "TIMEOUT!!! method: #{method}, socket: #{connectionId}" if @debug
+          console.error "TIMEOUT!!! method: #{method},
+           socket: #{connectionId}" if @debug
           @callbacks[id].call null, 'timeout'
       , @timeout
-
       @callbacks[id] = _callback
-    message = {id, method, params}
+
+
     console.warn "MESSAGE TO #{connectionId}", message if @debug
     @connections[connectionId].send JSON.stringify message
 

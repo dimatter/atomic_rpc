@@ -92,7 +92,7 @@
       connectionId = arg.id, method = arg.method, params = arg.params, callback = arg.callback;
       if (connectionId == null) {
         _.every(this.connections, (function(_this) {
-          return function(connection, id) {
+          return function(socket, id) {
             _this.call({
               id: id,
               method: method,
@@ -116,8 +116,17 @@
       if (params == null) {
         params = {};
       }
+      message = {
+        method: method,
+        params: params
+      };
       if (callback != null) {
-        id = process.hrtime().join('');
+        if (process.hrtime != null) {
+          id = process.hrtime().join('');
+        } else {
+          id = Date.now() + ("" + connectionId);
+        }
+        message.id = id;
         _callback = (function(_this) {
           return function() {
             delete _this.callbacks[id];
@@ -136,11 +145,6 @@
         })(this), this.timeout);
         this.callbacks[id] = _callback;
       }
-      message = {
-        id: id,
-        method: method,
-        params: params
-      };
       if (this.debug) {
         console.warn("MESSAGE TO " + connectionId, message);
       }
