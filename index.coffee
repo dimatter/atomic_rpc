@@ -17,7 +17,7 @@ module.exports = class AtomicRPC extends emitter
     @scopes = {}
     @callbacks = {}
     @id = 0
-    @debug = false
+    @debug = true
     if @server?
       socket = new ws.Server {@port}
       if @debug
@@ -72,7 +72,7 @@ module.exports = class AtomicRPC extends emitter
         if @callbacks[id]?
           console.error "TIMEOUT!!! method: #{method},
            socket: #{connectionId}" if @debug
-          @callbacks[id].call null, 'timeout'
+          @callbacks[id].call 'timeout'
       , @timeout
       @callbacks[id] = _callback
 
@@ -94,15 +94,18 @@ module.exports = class AtomicRPC extends emitter
     if method?
       args = [params]
       if id?
-        args.push (error, result) ->
+        args.push callback = (error, result) ->
           message = {id}
           if error?
             message.error = error
-          if result?
+          unless error? and result?
             message.result = result
           console.warn "MESSAGE TO #{socket.id}", message if @debug
           socket.send JSON.stringify message
       args.push socket.id
+      unless @exposures[method]?
+        console.error "NO SUCH EXPOSED METHOD: #{method}" if @debug
+        return callback('no such exposed method')
       @exposures[method].apply (@scopes[method] or @), args
     else if error? or result?
       @callbacks[id]?.call @, error, result

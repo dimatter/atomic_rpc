@@ -24,7 +24,7 @@
       this.scopes = {};
       this.callbacks = {};
       this.id = 0;
-      this.debug = false;
+      this.debug = true;
       if (this.server != null) {
         socket = new ws.Server({
           port: this.port
@@ -139,7 +139,7 @@
               if (_this.debug) {
                 console.error("TIMEOUT!!! method: " + method + ", socket: " + connectionId);
               }
-              return _this.callbacks[id].call(null, 'timeout');
+              return _this.callbacks[id].call('timeout');
             }
           };
         })(this), this.timeout);
@@ -152,7 +152,7 @@
     };
 
     AtomicRPC.prototype._messageHandler = function(socket, message) {
-      var args, error, id, method, params, ref, result;
+      var args, callback, error, id, method, params, ref, result;
       message = JSON.parse(message);
       id = message.id, method = message.method, params = message.params, error = message.error, result = message.result;
       this.emit('message', message);
@@ -162,14 +162,14 @@
       if (method != null) {
         args = [params];
         if (id != null) {
-          args.push(function(error, result) {
+          args.push(callback = function(error, result) {
             message = {
               id: id
             };
             if (error != null) {
               message.error = error;
             }
-            if (result != null) {
+            if (!((error != null) && (result != null))) {
               message.result = result;
             }
             if (this.debug) {
@@ -179,6 +179,12 @@
           });
         }
         args.push(socket.id);
+        if (this.exposures[method] == null) {
+          if (this.debug) {
+            console.error("NO SUCH EXPOSED METHOD: " + method);
+          }
+          return callback('no such exposed method');
+        }
         return this.exposures[method].apply(this.scopes[method] || this, args);
       } else if ((error != null) || (result != null)) {
         return (ref = this.callbacks[id]) != null ? ref.call(this, error, result) : void 0;
