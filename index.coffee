@@ -105,7 +105,7 @@ module.exports = class AtomicRPC extends emitter
       args.push socket.id
       unless @exposures[method]?
         console.error "NO SUCH EXPOSED METHOD: #{method}" if @debug
-        return callback('no such exposed method')
+        return callback('no such exposed method') if id?
       @exposures[method].apply (@scopes[method] or @), args
     else if error? or result?
       @callbacks[id]?.call @, error, result
