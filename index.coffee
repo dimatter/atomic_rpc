@@ -72,7 +72,7 @@ module.exports = class AtomicRPC extends emitter
         if @callbacks[id]?
           console.error "TIMEOUT!!! method: #{method},
            socket: #{connectionId}" if @debug
-          @callbacks[id].call 'timeout'
+          @callbacks[id].call @, 'timeout'
       , @timeout
       @callbacks[id] = _callback
 

@@ -139,7 +139,7 @@
               if (_this.debug) {
                 console.error("TIMEOUT!!! method: " + method + ", socket: " + connectionId);
               }
-              return _this.callbacks[id].call('timeout');
+              return _this.callbacks[id].call(_this, 'timeout');
             }
           };
         })(this), this.timeout);
