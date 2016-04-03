@@ -18,12 +18,9 @@ module.exports = class AtomicRPC extends emitter
     @callbacks = {}
     @id = 0
     @debug = true
+  initialize: ->
     if @server?
       socket = new ws.Server {@port}
-      if @debug
-        setInterval =>
-          console.log 'CONNECTION COUNT ', _.keys(@connections).length
-        , 10000
       socket.on 'connection', (client) =>
         @_connectionHandler client
         client.on 'close', => @_disconnectionHandler client
@@ -45,6 +42,10 @@ module.exports = class AtomicRPC extends emitter
       @scopes[method] = scope
 
   call: ({id: connectionId, method, params, callback}) ->
+    if _.isEmpty @connections
+      console.error "NOT CONNECTED" if @debug
+      if callback?
+        callback 'not connected'
     unless connectionId?
       _.every @connections, (socket, id) =>
         @call {id, method, params, callback}
@@ -102,11 +103,16 @@ module.exports = class AtomicRPC extends emitter
             message.result = result
           console.warn "MESSAGE TO #{socket.id}", message if @debug
           socket.send JSON.stringify message
+      else
+        args.push null
       args.push socket.id
       unless @exposures[method]?
         console.error "NO SUCH EXPOSED METHOD: #{method}" if @debug
         return callback('no such exposed method') if id?
-      @exposures[method].apply (@scopes[method] or @), args
+      try
+        @exposures[method].apply (@scopes[method] or @), args
+      catch e
+        console.error e
     else if error? or result?
       @callbacks[id]?.call @, error, result
 

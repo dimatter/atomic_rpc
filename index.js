@@ -14,7 +14,6 @@
     extend(AtomicRPC, superClass);
 
     function AtomicRPC(args) {
-      var socket;
       this.host = args.host, this.port = args.port, this.server = args.server, this.reconnect = args.reconnect, this.timeout = args.timeout;
       this.connections = {};
       this.exposures = {};
@@ -25,17 +24,14 @@
       this.callbacks = {};
       this.id = 0;
       this.debug = true;
+    }
+
+    AtomicRPC.prototype.initialize = function() {
+      var socket;
       if (this.server != null) {
         socket = new ws.Server({
           port: this.port
         });
-        if (this.debug) {
-          setInterval((function(_this) {
-            return function() {
-              return console.log('CONNECTION COUNT ', _.keys(_this.connections).length);
-            };
-          })(this), 10000);
-        }
         socket.on('connection', (function(_this) {
           return function(client) {
             _this._connectionHandler(client);
@@ -47,15 +43,15 @@
             });
           };
         })(this));
-        socket.on('error', (function(_this) {
+        return socket.on('error', (function(_this) {
           return function(error) {
             return _this._errorHandler(error, socket);
           };
         })(this));
       } else {
-        this._connectClient();
+        return this._connectClient();
       }
-    }
+    };
 
     AtomicRPC.prototype._connectClient = function() {
       var socket;
@@ -90,6 +86,14 @@
     AtomicRPC.prototype.call = function(arg) {
       var _callback, callback, connectionId, id, message, method, params;
       connectionId = arg.id, method = arg.method, params = arg.params, callback = arg.callback;
+      if (_.isEmpty(this.connections)) {
+        if (this.debug) {
+          console.error("NOT CONNECTED");
+        }
+        if (callback != null) {
+          callback('not connected');
+        }
+      }
       if (connectionId == null) {
         _.every(this.connections, (function(_this) {
           return function(socket, id) {
@@ -152,7 +156,7 @@
     };
 
     AtomicRPC.prototype._messageHandler = function(socket, message) {
-      var args, callback, error, id, method, params, ref, result;
+      var args, callback, e, error, error1, id, method, params, ref, result;
       message = JSON.parse(message);
       id = message.id, method = message.method, params = message.params, error = message.error, result = message.result;
       this.emit('message', message);
@@ -177,15 +181,24 @@
             }
             return socket.send(JSON.stringify(message));
           });
+        } else {
+          args.push(null);
         }
         args.push(socket.id);
         if (this.exposures[method] == null) {
           if (this.debug) {
             console.error("NO SUCH EXPOSED METHOD: " + method);
           }
-          return callback('no such exposed method');
+          if (id != null) {
+            return callback('no such exposed method');
+          }
         }
-        return this.exposures[method].apply(this.scopes[method] || this, args);
+        try {
+          return this.exposures[method].apply(this.scopes[method] || this, args);
+        } catch (error1) {
+          e = error1;
+          return console.error(e);
+        }
       } else if ((error != null) || (result != null)) {
         return (ref = this.callbacks[id]) != null ? ref.call(this, error, result) : void 0;
       }
