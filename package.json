@@ -10,8 +10,8 @@
   "author": "dimatter",
   "license": "MIT",
   "dependencies": {
-    "lodash": "^3.10.1",
-    "ws": "^1.0.1"
+    "lodash": "^4.11.1",
+    "ws": "^1.1.0"
   },
   "repository": {
     "type": "git",
