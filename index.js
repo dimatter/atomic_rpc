@@ -221,9 +221,8 @@
 
     AtomicRPC.prototype._errorHandler = function(error, socket) {
       if (this.debug) {
-        console.error(error);
+        return console.error(error);
       }
-      return this._disconnectionHandler(socket);
     };
 
     AtomicRPC.prototype._disconnectionHandler = function(socket) {

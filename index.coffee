@@ -127,7 +127,6 @@ module.exports = class AtomicRPC extends emitter
 
   _errorHandler: (error, socket) ->
     console.error error if @debug
-    @_disconnectionHandler socket
 
   _disconnectionHandler: (socket) ->
     @emit 'disconnect', socket

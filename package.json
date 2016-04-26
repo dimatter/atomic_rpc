@@ -1,6 +1,6 @@
 {
   "name": "atomic_rpc",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Bidirectional (almost)JSON-RPCv2.0 over websockets",
   "homepage": "https://github.com/dimatter/atomic_rpc#readme",
   "main": "index.js",
