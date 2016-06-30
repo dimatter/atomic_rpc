@@ -17,7 +17,7 @@ module.exports = class AtomicRPC extends emitter
     @scopes = {}
     @callbacks = {}
     @id = 0
-    @debug = true
+    @debug = false
   initialize: ->
     if @server?
       socket = new ws.Server {@port}

@@ -23,7 +23,7 @@
       this.scopes = {};
       this.callbacks = {};
       this.id = 0;
-      this.debug = true;
+      this.debug = false;
     }
 
     AtomicRPC.prototype.initialize = function() {
